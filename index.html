@@ -4,165 +4,586 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Anotador 1000 Millas</title>
+
+<!--
+  ANOTADOR 1000 MILLAS
+  Un solo archivo: HTML (estructura) + CSS (estilos) + JavaScript (lógica).
+  No usa librerías ni internet. La partida se guarda en el navegador (localStorage).
+
+  GUÍA RÁPIDA PARA MODIFICAR
+  - Cambiar filas o puntos de la hoja ........ constante ROWS (en el JavaScript)
+  - Cambiar los puntos para ganar ............ constante WIN_SCORE
+  - Cambiar colores ........................... variables CSS en :root
+  - Cambiar textos de pantalla ................ funciones render...() del JavaScript
+-->
+
 <style>
-:root{--bg:#f3efe6;--card:#fff;--ink:#14202a;--mute:#6a7680;--line:#d9d3c4;--red:#c8202a;--yel:#ffd400;--teal:#1fa393;--on-red:#fff;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e171d;--card:#18252e;--ink:#eef1f2;--mute:#93a1ab;--line:#2b3b46;--red:#e0414a;--teal:#33c3b1;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0e171d;--card:#18252e;--ink:#eef1f2;--mute:#93a1ab;--line:#2b3b46;--red:#e0414a;--teal:#33c3b1;color-scheme:dark}
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.35;padding:0 12px 40px}
-.wrap{max-width:760px;margin:0 auto}
-h1{font-size:1.5rem;margin:16px 0 2px;letter-spacing:-.01em}
-h1 b{color:var(--red)}
-.sub{color:var(--mute);font-size:.9rem;margin:0 0 14px}
-button{font:inherit;color:inherit;cursor:pointer}
-.btn{background:var(--red);color:var(--on-red);border:0;border-radius:10px;padding:12px 16px;font-weight:700}
-.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
-.btn:focus-visible,.tab:focus-visible,.stp:focus-visible,.chk:focus-visible,input:focus-visible{outline:3px solid var(--yel);outline-offset:1px}
-.setup{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-.counts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
-.counts .btn{min-width:56px;font-size:1.2rem}
-.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
-.pl{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
-.pl .n{font-size:.85rem;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pl .v{font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums}
-.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:4px}
-.bar i{display:block;height:100%;background:var(--teal)}
-.pl.lead .bar i{background:var(--red)}
-.win{background:var(--yel);color:#14202a;border-radius:12px;padding:12px 14px;font-weight:700;margin-bottom:12px}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
-.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px}
-.tab[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.sheet{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
-table{border-collapse:collapse;width:100%}
-th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:6px;text-align:center;vertical-align:middle}
-th:last-child,td:last-child{border-right:0}
-tr:last-child td,tr:last-child th{border-bottom:0}
-thead th{background:var(--ink);padding:6px}
-thead th:first-child,tbody th{position:sticky;left:0}
-tbody th{background:var(--card);text-align:left;font-size:.85rem;font-weight:700;min-width:96px;z-index:1;border-right:1px solid var(--line)}
-thead th:first-child{background:var(--ink);color:var(--bg);font-size:.85rem;text-align:left;z-index:2}
-td{min-width:88px}
-.nm{width:100%;min-width:76px;background:transparent;border:0;color:var(--bg);font:inherit;font-weight:700;text-align:center;padding:4px}
-.num{width:100%;max-width:90px;font:inherit;font-size:1.1rem;text-align:center;padding:8px 4px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-.cnt{display:flex;align-items:center;justify-content:center;gap:4px}
-.stp{width:34px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg);font-size:1.2rem;font-weight:800}
-.cnt .val{min-width:16px;font-weight:800;font-size:1.1rem}
-.chk{width:100%;max-width:100px;height:44px;margin:0 auto;border:0;background:transparent;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;color:var(--mute);padding:0 8px;border-radius:8px}
-.chk .box{width:26px;height:26px;flex:0 0 26px;border:2px solid var(--mute);border-radius:6px;background:var(--card);display:flex;align-items:center;justify-content:center;color:transparent;font-size:17px;line-height:1;font-weight:900}
-.chk[aria-checked="true"]{color:var(--ink)}
-.chk[aria-checked="true"] .box{background:var(--teal);border-color:var(--teal);color:#fff}
-.pt{display:block;font-size:.72rem;color:var(--mute);margin-top:2px;font-variant-numeric:tabular-nums}
-tfoot th,tfoot td{background:var(--bg);font-weight:800;font-size:1.15rem;font-variant-numeric:tabular-nums}
-tfoot th{font-size:.9rem}
-tfoot tr:last-child th,tfoot tr:last-child td{background:var(--ink);color:var(--bg)}
-.foot{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
-.hint{color:var(--mute);font-size:.8rem;margin-top:10px}
+/* ============================================================
+   1. COLORES Y VARIABLES
+   Todos los colores salen de acá. Para cambiar la paleta, tocá solo estas variables.
+   ============================================================ */
+:root {
+  --bg: #f3efe6;     /* fondo de la página */
+  --card: #fff;      /* fondo de tarjetas y celdas */
+  --ink: #14202a;    /* texto principal */
+  --mute: #6a7680;   /* texto secundario */
+  --line: #d9d3c4;   /* bordes */
+  --red: #c8202a;    /* acento principal (botones, líder) */
+  --yel: #ffd400;    /* aviso de ganador y foco de teclado */
+  --teal: #1fa393;   /* casillas marcadas y barras de progreso */
+  --on-red: #fff;    /* texto sobre fondo rojo */
+  box-sizing: border-box;
+  /* Deja espacio para el notch y la barra del sistema en teléfonos */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Modo oscuro automático (según el sistema del teléfono) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e171d; --card: #18252e; --ink: #eef1f2; --mute: #93a1ab;
+    --line: #2b3b46; --red: #e0414a; --teal: #33c3b1;
+    color-scheme: dark;
+  }
+}
+/* Fuerza el modo oscuro si se pone data-theme="dark" en <html> */
+:root[data-theme="dark"] {
+  --bg: #0e171d; --card: #18252e; --ink: #eef1f2; --mute: #93a1ab;
+  --line: #2b3b46; --red: #e0414a; --teal: #33c3b1;
+  color-scheme: dark;
+}
+
+/* ============================================================
+   2. BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.35;
+  padding: 0 12px 40px;
+}
+.wrap { max-width: 760px; margin: 0 auto; } /* centra el contenido en pantallas grandes */
+h1 { font-size: 1.5rem; margin: 16px 0 2px; letter-spacing: -.01em; }
+h1 b { color: var(--red); }
+.sub  { color: var(--mute); font-size: .9rem; margin: 0 0 14px; }
+.hint { color: var(--mute); font-size: .8rem; margin-top: 10px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* Anillo amarillo al navegar con teclado (accesibilidad) */
+.btn:focus-visible, .tab:focus-visible, .stp:focus-visible,
+.chk:focus-visible, input:focus-visible {
+  outline: 3px solid var(--yel);
+  outline-offset: 1px;
+}
+
+/* ============================================================
+   3. BOTONES
+   ============================================================ */
+.btn { background: var(--red); color: var(--on-red); border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 700; }
+.btn.alt { background: transparent; color: var(--ink); border: 1px solid var(--line); } /* botón secundario */
+.foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px; }
+
+/* ============================================================
+   4. PANTALLAS DE INICIO (cantidad de jugadores y nombres)
+   ============================================================ */
+.setup { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.counts { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; }
+.counts .btn { min-width: 56px; font-size: 1.2rem; }
+.nmin { /* campo de nombre en la pantalla de nombres */
+  width: 100%; font: inherit; font-size: 1.05rem; padding: 12px; margin-bottom: 8px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink);
+}
+
+/* ============================================================
+   5. MARCADOR (arriba) Y AVISO DE GANADOR
+   ============================================================ */
+.board { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.pl { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.pl .n { font-size: .85rem; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl .v { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 4px; }
+.bar i { display: block; height: 100%; background: var(--teal); }
+.pl.lead .bar i { background: var(--red); } /* el que va ganando */
+.win { background: var(--yel); color: #14202a; border-radius: 12px; padding: 12px 14px; font-weight: 700; margin-bottom: 12px; }
+
+/* ============================================================
+   6. PESTAÑAS DE MANOS
+   ============================================================ */
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; }
+.tab { flex: 0 0 auto; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 8px 14px; }
+.tab[aria-current="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* ============================================================
+   7. HOJA DE PUNTAJE (la tabla)
+   Si hay muchos jugadores, la tabla se desliza de costado y la
+   primera columna (nombres de filas) queda fija.
+   ============================================================ */
+.sheet { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 6px; text-align: center; vertical-align: middle; }
+th:last-child, td:last-child { border-right: 0; }
+tr:last-child td, tr:last-child th { border-bottom: 0; }
+td { min-width: 88px; }
+
+thead th { background: var(--ink); padding: 6px; }                       /* fila con los nombres */
+thead th:first-child, tbody th { position: sticky; left: 0; }            /* columna fija */
+thead th:first-child { background: var(--ink); color: var(--bg); font-size: .85rem; text-align: left; z-index: 2; }
+tbody th { background: var(--card); text-align: left; font-size: .85rem; font-weight: 700; min-width: 96px; z-index: 1; border-right: 1px solid var(--line); }
+
+tfoot th, tfoot td { background: var(--bg); font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+tfoot th { font-size: .9rem; }
+tfoot tr:last-child th, tfoot tr:last-child td { background: var(--ink); color: var(--bg); } /* fila TOTAL */
+
+/* Nombre editable dentro del encabezado */
+.nm { width: 100%; min-width: 76px; background: transparent; border: 0; color: var(--bg); font: inherit; font-weight: 700; text-align: center; padding: 4px; }
+
+/* Campo numérico (Recorrido) */
+.num { width: 100%; max-width: 90px; font: inherit; font-size: 1.1rem; text-align: center; padding: 8px 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+
+/* Contador con botones − y + (TK, Seguridades I) */
+.cnt { display: flex; align-items: center; justify-content: center; gap: 4px; }
+.stp { width: 34px; height: 36px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); font-size: 1.2rem; font-weight: 800; }
+.cnt .val { min-width: 16px; font-weight: 800; font-size: 1.1rem; }
+
+/* Casilla tipo checkbox con su puntaje al lado */
+.chk { width: 100%; max-width: 100px; height: 44px; margin: 0 auto; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; color: var(--mute); padding: 0 8px; border-radius: 8px; }
+.chk .box { width: 26px; height: 26px; flex: 0 0 26px; border: 2px solid var(--mute); border-radius: 6px; background: var(--card); display: flex; align-items: center; justify-content: center; color: transparent; font-size: 17px; line-height: 1; font-weight: 900; }
+.chk[aria-checked="true"] { color: var(--ink); }
+.chk[aria-checked="true"] .box { background: var(--teal); border-color: var(--teal); color: #fff; } /* tilde visible */
+
+/* Texto chico debajo de una celda ("300 pts") */
+.pt { display: block; font-size: .72rem; color: var(--mute); margin-top: 2px; font-variant-numeric: tabular-nums; }
 </style>
 </head>
-<body>
-<div class="wrap" id="app"></div>
-<script>
-var KEY="mil1000-v1";
-var ROWS=[
- {k:"vc",l:"Viaje completo",t:"chk",p:400},
- {k:"rec",l:"Recorrido",t:"num"},
- {k:"tk",l:"TK",t:"cnt"},
- {k:"seg",l:"Seguridades I",t:"cnt"},
- {k:"seg2",l:"Seguridades II",t:"chk",p:300},
- {k:"vs",l:"Viaje seguro",t:"chk",p:300},
- {k:"bl",l:"Bloqueo",t:"chk",p:500},
- {k:"ar",l:"Acción demorada",t:"chk",p:300},
- {k:"ex",l:"Alargue",t:"chk",p:200}
-];
-var S=null, armed=false, P=0;
-try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
-if(S&&S.closed===undefined)S.closed=S.hands.length-1;
-if(S&&!S.v2){S.hands.forEach(function(H){H.forEach(function(c){if(c.seg===4&&!c.seg2)c.seg2=true})});S.v2=1}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function blank(){var o={};ROWS.forEach(function(r){o[r.k]=r.t==="chk"?false:0});return o}
-function newHand(){return S.names.map(blank)}
-function pts(h,r){
- var v=h[r.k];
- if(r.k==="rec")return Number(v)||0;
- if(r.k==="seg")return v*100;
- 
- if(r.k==="tk")return v*300;
- return v?r.p:0;
-}
-function handTot(h){return ROWS.reduce(function(a,r){return a+pts(h,r)},0)}
-function cum(i){var s=0;for(var k=0;k<S.closed;k++)s+=handTot(S.hands[k][i]);return s}
-function leader(){var t=S.names.map(function(_,i){return cum(i)}),m=Math.max.apply(null,t),c=t.filter(function(x){return x===m}).length;return {max:m,win:(m>=5000&&c===1)?t.indexOf(m):-1}}
-function norm(){if(S.closed===S.hands.length&&leader().win===-1){S.hands.push(newHand());S.cur=S.hands.length-1;save()}}
-function esc(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}
-function fmt(n){return n.toLocaleString("es-AR")}
 
-function render(){
- var el=document.getElementById("app");
- if(!S&&P){var f='<h1>1000 <b>millas</b></h1><p class="sub">Anotador de puntajes</p><div class="setup"><strong>¿Cómo se llaman?</strong><p class="sub">Escribí el nombre de cada jugador o equipo.</p>';
-  for(var q=0;q<P;q++)f+='<input class="nmin" style="width:100%;font:inherit;font-size:1.05rem;padding:12px;margin-bottom:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)" id="sn'+q+'" maxlength="24" placeholder="Jugador '+(q+1)+'" aria-label="Nombre '+(q+1)+'">';
-  f+='<div class="foot"><button class="btn alt" data-a="back">Volver</button><button class="btn" data-a="start">Empezar</button></div></div>';el.innerHTML=f;return}
- if(!S){
-  el.innerHTML='<h1>1000 <b>millas</b></h1><p class="sub">Anotador de puntajes</p><div class="setup"><strong>¿Cuántos jugadores o equipos son?</strong><div class="counts">'+
-  [2,3,4,5,6].map(function(n){return '<button class="btn" data-a="count" data-n="'+n+'">'+n+'</button>'}).join("")+
-  '</div></div>';
-  return;
- }
- norm(); var tots=S.names.map(function(_,i){return cum(i)}), max=Math.max.apply(null,tots), L=leader();
- var over=S.closed===S.hands.length; if(S.cur>=S.hands.length)S.cur=S.hands.length-1; var H=S.hands[S.cur];
- var h='<h1>1000 <b>millas</b></h1><p class="sub">Se gana al llegar a 5.000 puntos</p>';
- if(over){h+='<div class="win">¡'+esc(S.names[L.win])+' ganó la partida con '+fmt(max)+' puntos!</div>'}else if(max>=5000){h+='<div class="win">Hay empate en el primer lugar con '+fmt(max)+' puntos. Jueguen otra mano para desempatar.</div>'}
- h+='<div class="board">'+S.names.map(function(n,i){
-  return '<div class="pl'+(tots[i]===max&&max>0?' lead':'')+'"><div class="n">'+esc(n)+'</div><div class="v" id="c'+i+'">'+fmt(tots[i])+'</div><div class="pt" id="o'+i+'">'+(over?'':'En juego: +'+fmt(handTot(S.hands[S.closed][i])))+'</div><div class="bar"><i id="b'+i+'" style="width:'+Math.min(100,tots[i]/50)+'%"></i></div></div>';
- }).join("")+'</div>';
- h+='<div class="tabs">'+S.hands.map(function(_,i){return '<button class="tab" data-a="tab" data-i="'+i+'"'+(i===S.cur?' aria-current="true"':'')+'>Mano '+(i+1)+'</button>'}).join("")+'</div>';
- h+='<div class="sheet"><table><thead><tr><th>Equipos o jugadores</th>'+S.names.map(function(n,i){return '<th><input class="nm" data-i="'+i+'" value="'+esc(n)+'" aria-label="Nombre del jugador '+(i+1)+'"></th>'}).join("")+'</tr></thead><tbody>';
- ROWS.forEach(function(r){
-  h+='<tr><th>'+r.l+'</th>';
-  H.forEach(function(c,i){
-   var v=c[r.k], p=pts(c,r), cell;
-   if(r.t==="num")cell='<input class="num" type="number" inputmode="numeric" min="0" step="25" placeholder="0" data-i="'+i+'" value="'+(v||"")+'" aria-label="Recorrido de '+esc(S.names[i])+'">';
-   else if(r.t==="cnt")cell='<div class="cnt"><button class="stp" data-a="cnt" data-i="'+i+'" data-k="'+r.k+'" data-d="-1" aria-label="Restar">−</button><span class="val">'+v+'</span><button class="stp" data-a="cnt" data-i="'+i+'" data-k="'+r.k+'" data-d="1" aria-label="Sumar">+</button></div>';
-   else if(r.t==="auto")cell='<div class="chk" role="checkbox" aria-readonly="true" aria-checked="'+(p>0)+'" aria-label="Seguridades II de '+esc(S.names[i])+'"><span class="box">✓</span><span>300</span></div>';
-   else cell='<button class="chk" role="checkbox" data-a="tog" data-i="'+i+'" data-k="'+r.k+'" aria-checked="'+v+'" aria-label="'+r.l+' de '+esc(S.names[i])+'"><span class="box">✓</span><span>'+r.p+'</span></button>';
-   h+='<td>'+cell+(r.t==="chk"||r.t==="auto"?'':'<span class="pt" id="p'+r.k+i+'">'+(r.t==="num"?'':fmt(p)+' pts')+'</span>')+'</td>';
+<body>
+<!-- Todo el contenido se dibuja dentro de este div desde el JavaScript -->
+<div class="wrap" id="app"></div>
+
+<script>
+/* ============================================================
+   1. CONFIGURACIÓN
+   Acá se cambian las reglas del juego sin tocar el resto del código.
+   ============================================================ */
+
+const STORAGE_KEY = "mil1000-v1"; // clave donde se guarda la partida en el navegador
+const WIN_SCORE   = 5000;         // puntos necesarios para ganar
+const PLAYER_OPTIONS = [2, 3, 4, 5, 6]; // cantidades de jugadores que se ofrecen
+
+/*
+  Filas de la hoja, en el orden en que se ven en pantalla.
+    key    : nombre interno (se guarda en la partida; no lo cambies si ya hay partidas guardadas)
+    label  : texto que se muestra
+    type   : "check"  -> casilla que suma `points` si está marcada
+             "number" -> número que se escribe (se suma tal cual)
+             "count"  -> contador con − y +; suma `each` por unidad, hasta `max`
+*/
+const ROWS = [
+  { key: "vc",   label: "Viaje completo",   type: "check",  points: 400 },
+  { key: "rec",  label: "Recorrido",        type: "number" },
+  { key: "tk",   label: "TK",               type: "count",  each: 300, max: 4 },
+  { key: "seg",  label: "Seguridades I",    type: "count",  each: 100, max: 4 },
+  { key: "seg2", label: "Seguridades II",   type: "check",  points: 300 },
+  { key: "vs",   label: "Viaje seguro",     type: "check",  points: 300 },
+  { key: "bl",   label: "Bloqueo",          type: "check",  points: 500 },
+  { key: "ar",   label: "Acción demorada",  type: "check",  points: 300 },
+  { key: "ex",   label: "Alargue",          type: "check",  points: 200 }
+];
+
+/* ============================================================
+   2. ESTADO
+   La partida (S) tiene esta forma, y es lo que se guarda:
+     {
+       names:  ["Ana", "Luis"],      // un nombre por jugador
+       hands:  [ [celda, celda], … ],// una mano = una celda por jugador
+       cur:    0,                    // índice de la mano que se está mirando
+       closed: 0                     // cuántas manos ya están terminadas
+     }
+   Una "celda" guarda los datos de un jugador en una mano:
+     { vc:false, rec:0, tk:0, seg:0, seg2:false, vs:false, bl:false, ar:false, ex:false }
+
+   Mientras se juega, la mano abierta es hands[closed]. Cuando closed ===
+   hands.length, no queda ninguna mano abierta y la partida terminó.
+   ============================================================ */
+
+let S = null;             // la partida; null si todavía no se empezó
+let pendingCount = 0;     // jugadores elegidos mientras se escriben los nombres
+let confirmReset = false; // true después del primer toque en "Nueva partida"
+
+const app = document.getElementById("app");
+
+/* ============================================================
+   3. GUARDADO Y CARGA (localStorage)
+   ============================================================ */
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento: se sigue igual */ }
+}
+
+function load() {
+  try { S = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { S = null; }
+  if (!S) return;
+
+  // Migración 1: partidas viejas no tenían "closed"; se asume la última mano como abierta
+  if (S.closed === undefined) S.closed = S.hands.length - 1;
+
+  // Migración 2: antes Seguridades II se calculaba sola; ahora es una casilla.
+  // Se tilda en las manos que ya tenían 4 seguridades. La marca v2 evita repetirlo.
+  if (!S.v2) {
+    S.hands.forEach(hand => hand.forEach(cell => { if (cell.seg === 4 && !cell.seg2) cell.seg2 = true; }));
+    S.v2 = 1;
+  }
+}
+
+/* ============================================================
+   4. CÁLCULO DE PUNTAJES
+   ============================================================ */
+
+// Celda vacía de un jugador: false en las casillas, 0 en el resto
+function blankCell() {
+  const cell = {};
+  ROWS.forEach(row => { cell[row.key] = row.type === "check" ? false : 0; });
+  return cell;
+}
+
+// Mano nueva: una celda vacía por jugador
+function newHand() { return S.names.map(blankCell); }
+
+// Puntos de una fila para una celda
+function rowPoints(cell, row) {
+  const v = cell[row.key];
+  if (row.type === "number") return Number(v) || 0;
+  if (row.type === "count")  return v * row.each;
+  return v ? row.points : 0; // "check"
+}
+
+// Total de una celda (un jugador en una mano)
+function cellTotal(cell) {
+  return ROWS.reduce((sum, row) => sum + rowPoints(cell, row), 0);
+}
+
+// Acumulado del jugador i: solo cuenta las manos terminadas
+function closedTotal(i) {
+  let sum = 0;
+  for (let k = 0; k < S.closed; k++) sum += cellTotal(S.hands[k][i]);
+  return sum;
+}
+
+/* ============================================================
+   5. ESTADO DE LA PARTIDA (quién gana, cuándo termina)
+   ============================================================ */
+
+// Devuelve los totales, el máximo y el índice del ganador (-1 si no hay).
+// Gana solo quien llega a WIN_SCORE y está solo en el primer lugar; si hay empate, no hay ganador.
+function leader() {
+  const totals = S.names.map((_, i) => closedTotal(i));
+  const max = Math.max(...totals);
+  const tied = totals.filter(t => t === max).length;
+  return { totals, max, winner: (max >= WIN_SCORE && tied === 1) ? totals.indexOf(max) : -1 };
+}
+
+// ¿Terminó la partida? Sí, cuando no queda ninguna mano abierta
+function isOver() { return S.closed === S.hands.length; }
+
+// Corrige inconsistencias: si no queda mano abierta pero tampoco hay ganador
+// (por ejemplo, después de corregir una mano vieja), abre una mano nueva.
+function normalize() {
+  if (isOver() && leader().winner === -1) {
+    S.hands.push(newHand());
+    S.cur = S.hands.length - 1;
+    save();
+  }
+}
+
+/* ============================================================
+   6. UTILIDADES
+   ============================================================ */
+
+// Escapa texto para meterlo en HTML sin romperlo (nombres escritos por el usuario)
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+// Número con separador de miles al estilo argentino: 5.000
+function fmt(n) { return n.toLocaleString("es-AR"); }
+
+/* ============================================================
+   7. DIBUJO DE PANTALLAS
+   Cada render...() devuelve texto HTML que se pone dentro de #app.
+   render() elige cuál mostrar según el estado.
+   ============================================================ */
+
+const TITLE = '<h1>1000 <b>millas</b></h1>';
+
+function render() {
+  if (!S && pendingCount) { app.innerHTML = renderNamesScreen(); return; }
+  if (!S)                 { app.innerHTML = renderCountScreen(); return; }
+  app.innerHTML = renderGame();
+}
+
+/* ---- Pantalla 1: cuántos jugadores ---- */
+function renderCountScreen() {
+  const buttons = PLAYER_OPTIONS
+    .map(n => `<button class="btn" data-a="count" data-n="${n}">${n}</button>`)
+    .join("");
+  return `${TITLE}<p class="sub">Anotador de puntajes</p>
+    <div class="setup"><strong>¿Cuántos jugadores o equipos son?</strong>
+    <div class="counts">${buttons}</div></div>`;
+}
+
+/* ---- Pantalla 2: nombres ---- */
+function renderNamesScreen() {
+  let inputs = "";
+  for (let i = 0; i < pendingCount; i++) {
+    inputs += `<input class="nmin" id="sn${i}" maxlength="24" placeholder="Jugador ${i + 1}" aria-label="Nombre ${i + 1}">`;
+  }
+  return `${TITLE}<p class="sub">Anotador de puntajes</p>
+    <div class="setup"><strong>¿Cómo se llaman?</strong>
+    <p class="sub">Escribí el nombre de cada jugador o equipo.</p>${inputs}
+    <div class="foot">
+      <button class="btn alt" data-a="back">Volver</button>
+      <button class="btn" data-a="start">Empezar</button>
+    </div></div>`;
+}
+
+/* ---- Pantalla 3: la partida ---- */
+function renderGame() {
+  normalize();
+  const { totals, max, winner } = leader();
+  const over = isOver();
+  if (S.cur >= S.hands.length) S.cur = S.hands.length - 1;
+  const hand = S.hands[S.cur]; // la mano que se está viendo
+
+  return TITLE +
+    `<p class="sub">Se gana al llegar a ${fmt(WIN_SCORE)} puntos</p>` +
+    renderBanner(over, winner, max) +
+    renderBoard(totals, max, over) +
+    renderTabs() +
+    renderSheet(hand, totals) +
+    `<p class="hint">Seguridades I suma 100 por carta. Seguridades II suma 300: se tilda sola al llegar a 4 en Seguridades I, pero podés marcarla o desmarcarla vos. TK suma 300 cada una. Al terminar una mano se suma al total. Gana quien llega a ${fmt(WIN_SCORE)} o más al cerrar una mano. Todo se guarda solo en este teléfono.</p>` +
+    renderActions(over);
+}
+
+// Aviso amarillo: ganador o empate
+function renderBanner(over, winner, max) {
+  if (over) {
+    return `<div class="win">¡${esc(S.names[winner])} ganó la partida con ${fmt(max)} puntos!</div>`;
+  }
+  if (max >= WIN_SCORE) { // llegaron al puntaje pero hay empate arriba
+    return `<div class="win">Hay empate en el primer lugar con ${fmt(max)} puntos. Jueguen otra mano para desempatar.</div>`;
+  }
+  return "";
+}
+
+// Marcador: una tarjeta por jugador con su total y barra de progreso.
+// Los ids (c, o, b) los usa updateLive() para refrescar sin redibujar todo.
+function renderBoard(totals, max, over) {
+  const cards = S.names.map((name, i) => {
+    const inPlay = over ? "" : "En juego: +" + fmt(cellTotal(S.hands[S.closed][i]));
+    const isLead = totals[i] === max && max > 0;
+    return `<div class="pl${isLead ? " lead" : ""}">
+      <div class="n">${esc(name)}</div>
+      <div class="v" id="c${i}">${fmt(totals[i])}</div>
+      <div class="pt" id="o${i}">${inPlay}</div>
+      <div class="bar"><i id="b${i}" style="width:${barWidth(totals[i])}%"></i></div>
+    </div>`;
+  }).join("");
+  return `<div class="board">${cards}</div>`;
+}
+
+// Ancho de la barra de progreso en %, con tope en 100
+function barWidth(total) { return Math.min(100, total / WIN_SCORE * 100); }
+
+// Pestañas: una por mano
+function renderTabs() {
+  const tabs = S.hands.map((_, i) =>
+    `<button class="tab" data-a="tab" data-i="${i}"${i === S.cur ? ' aria-current="true"' : ""}>Mano ${i + 1}</button>`
+  ).join("");
+  return `<div class="tabs">${tabs}</div>`;
+}
+
+// La hoja: encabezado con nombres, una fila por ROWS, y los totales al pie
+function renderSheet(hand, totals) {
+  const header = S.names.map((name, i) =>
+    `<th><input class="nm" data-i="${i}" value="${esc(name)}" aria-label="Nombre del jugador ${i + 1}"></th>`
+  ).join("");
+
+  const rows = ROWS.map(row => {
+    const cells = hand.map((cell, i) => `<td>${renderCell(row, cell, i)}</td>`).join("");
+    return `<tr><th>${row.label}</th>${cells}</tr>`;
+  }).join("");
+
+  const handTotals = hand.map((cell, i) => `<td id="t${i}">${fmt(cellTotal(cell))}</td>`).join("");
+  const grandTotals = S.names.map((_, i) => `<td id="g${i}">${fmt(totals[i])}</td>`).join("");
+
+  return `<div class="sheet"><table>
+    <thead><tr><th>Equipos o jugadores</th>${header}</tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot>
+      <tr><th>Total de la mano</th>${handTotals}</tr>
+      <tr><th>Total</th>${grandTotals}</tr>
+    </tfoot>
+  </table></div>`;
+}
+
+// Una celda según el tipo de fila (number, count o check)
+function renderCell(row, cell, i) {
+  const v = cell[row.key];
+
+  if (row.type === "number") {
+    return `<input class="num" type="number" inputmode="numeric" min="0" step="25" placeholder="0"
+      data-i="${i}" value="${v || ""}" aria-label="${row.label} de ${esc(S.names[i])}">`;
+  }
+
+  if (row.type === "count") {
+    const btn = (delta, sign, label) =>
+      `<button class="stp" data-a="cnt" data-i="${i}" data-k="${row.key}" data-d="${delta}" aria-label="${label}">${sign}</button>`;
+    return `<div class="cnt">${btn(-1, "−", "Restar")}<span class="val">${v}</span>${btn(1, "+", "Sumar")}</div>
+      <span class="pt">${fmt(rowPoints(cell, row))} pts</span>`;
+  }
+
+  // "check"
+  return `<button class="chk" role="checkbox" data-a="tog" data-i="${i}" data-k="${row.key}"
+    aria-checked="${v}" aria-label="${row.label} de ${esc(S.names[i])}">
+    <span class="box">✓</span><span>${row.points}</span></button>`;
+}
+
+// Botones de abajo: terminar mano / corregir / nueva partida
+function renderActions(over) {
+  let main;
+  if (over) {
+    main = `<button class="btn" data-a="reopen">Corregir última mano</button>`;
+  } else if (S.cur === S.closed) {
+    main = `<button class="btn" data-a="close">Terminar mano ${S.closed + 1}</button>`;
+  } else { // se está mirando una mano vieja
+    main = `<button class="btn" data-a="tab" data-i="${S.closed}">Volver a la mano en juego</button>`;
+  }
+  const resetLabel = confirmReset ? "¿Seguro? Se borra todo" : "Nueva partida";
+  return `<div class="foot">${main}<button class="btn alt" data-a="reset">${resetLabel}</button></div>`;
+}
+
+/* ============================================================
+   8. ACTUALIZACIÓN EN VIVO
+   Mientras se escribe en el campo Recorrido no se redibuja toda la pantalla
+   (se perdería el foco del teclado); solo se actualizan los números.
+   ============================================================ */
+function updateLive() {
+  const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+  S.hands[S.cur].forEach((cell, i) => setText("t" + i, fmt(cellTotal(cell))));
+
+  S.names.forEach((_, i) => {
+    const total = closedTotal(i);
+    setText("g" + i, fmt(total));
+    setText("c" + i, fmt(total));
+    const bar = document.getElementById("b" + i);
+    if (bar) bar.style.width = barWidth(total) + "%";
+    if (S.hands[S.closed]) setText("o" + i, "En juego: +" + fmt(cellTotal(S.hands[S.closed][i])));
   });
-  h+='</tr>';
- });
- h+='</tbody><tfoot><tr><th>Total de la mano</th>'+H.map(function(c,i){return '<td id="t'+i+'">'+fmt(handTot(c))+'</td>'}).join("")+'</tr><tr><th>Total</th>'+S.names.map(function(_,i){return '<td id="g'+i+'">'+fmt(tots[i])+'</td>'}).join("")+'</tr></tfoot></table></div>';
- h+='<p class="hint">Seguridades I suma 100 por carta. Seguridades II suma 300: se tilda sola al llegar a 4 en Seguridades I, pero podés marcarla o desmarcarla vos. TK suma 300 cada una. Al terminar una mano se suma al total. Gana quien llega a 5.000 o más al cerrar una mano. Todo se guarda solo en este teléfono.</p>';
- h+='<div class="foot">'+(over?'<button class="btn" data-a="reopen">Corregir última mano</button>':(S.cur===S.closed?'<button class="btn" data-a="close">Terminar mano '+(S.closed+1)+'</button>':'<button class="btn" data-a="tab" data-i="'+S.closed+'">Volver a la mano en juego</button>'))+'<button class="btn alt" data-a="reset">'+(armed?'¿Seguro? Se borra todo':'Nueva partida')+'</button></div>';
- el.innerHTML=h;
 }
-function live(){
- var H=S.hands[S.cur];
- H.forEach(function(c,i){var t=document.getElementById("t"+i);if(t)t.textContent=fmt(handTot(c))});
- S.names.forEach(function(_,i){var v=cum(i),c=document.getElementById("c"+i),b=document.getElementById("b"+i),o=document.getElementById("o"+i),g=document.getElementById("g"+i);if(g)g.textContent=fmt(v);if(c)c.textContent=fmt(v);if(b)b.style.width=Math.min(100,v/50)+"%";if(o&&S.hands[S.closed])o.textContent="En juego: +"+fmt(handTot(S.hands[S.closed][i]))});
-}
-var app=document.getElementById("app");
-app.addEventListener("click",function(e){
- var b=e.target.closest("[data-a]");if(!b)return;
- var a=b.dataset.a;
- if(a!=="reset")armed=false;
- if(a==="count"){P=+b.dataset.n}
- else if(a==="back"){P=0}
- else if(a==="start"){var n=P;S={names:[],hands:[],cur:0,closed:0};for(var i=0;i<n;i++){var inp=document.getElementById("sn"+i);S.names.push((inp&&inp.value.trim())||"Jugador "+(i+1))}S.hands=[newHand()];P=0}
- else if(a==="close"){S.closed=S.cur+1;if(leader().win===-1){S.hands.push(newHand());S.cur=S.hands.length-1}}
- else if(a==="reopen"){S.closed=S.hands.length-1;S.cur=S.closed}
- else if(a==="tab"){S.cur=+b.dataset.i}
- else if(a==="new"){S.hands.push(newHand());S.cur=S.hands.length-1}
- else if(a==="cnt"){var c=S.hands[S.cur][+b.dataset.i];c[b.dataset.k]=Math.max(0,Math.min(4,c[b.dataset.k]+ +b.dataset.d));if(b.dataset.k==="seg")c.seg2=c.seg===4}
- else if(a==="tog"){var c2=S.hands[S.cur][+b.dataset.i];c2[b.dataset.k]=!c2[b.dataset.k]}
- else if(a==="del"){S.hands.splice(S.cur,1);S.cur=Math.max(0,S.cur-1)}
- else if(a==="reset"){if(armed){S=null;armed=false;try{localStorage.removeItem(KEY)}catch(x){}}else{armed=true}}
- save();render();
+
+/* ============================================================
+   9. EVENTOS
+   Un solo "oyente" por tipo de evento sobre #app (delegación).
+   Cada botón lleva data-a="acción" que decide qué pasa.
+   ============================================================ */
+
+app.addEventListener("click", e => {
+  const btn = e.target.closest("[data-a]");
+  if (!btn) return;
+  const action = btn.dataset.a;
+  const i = Number(btn.dataset.i);
+
+  if (action !== "reset") confirmReset = false; // cualquier otro toque cancela la confirmación
+
+  switch (action) {
+
+    // --- Pantallas de inicio ---
+    case "count":  // elegir cantidad de jugadores
+      pendingCount = Number(btn.dataset.n);
+      break;
+    case "back":   // volver a elegir cantidad
+      pendingCount = 0;
+      break;
+    case "start":  // crear la partida con los nombres escritos
+      S = { names: [], hands: [], cur: 0, closed: 0, v2: 1 };
+      for (let k = 0; k < pendingCount; k++) {
+        const input = document.getElementById("sn" + k);
+        S.names.push((input && input.value.trim()) || "Jugador " + (k + 1));
+      }
+      S.hands = [newHand()];
+      pendingCount = 0;
+      break;
+
+    // --- Durante la partida ---
+    case "tab":    // ver otra mano
+      S.cur = i;
+      break;
+    case "cnt": {  // sumar o restar en un contador (TK, Seguridades I)
+      const row = ROWS.find(r => r.key === btn.dataset.k);
+      const cell = S.hands[S.cur][i];
+      cell[row.key] = Math.max(0, Math.min(row.max, cell[row.key] + Number(btn.dataset.d)));
+      // Regla de comodidad: al llegar a 4 seguridades se tilda Seguridades II (se puede cambiar a mano)
+      if (row.key === "seg") cell.seg2 = cell.seg === 4;
+      break;
+    }
+    case "tog": {  // marcar o desmarcar una casilla
+      const cell = S.hands[S.cur][i];
+      cell[btn.dataset.k] = !cell[btn.dataset.k];
+      break;
+    }
+    case "close":  // terminar la mano: se suma al total y se abre otra (salvo que haya ganador)
+      S.closed = S.cur + 1;
+      if (leader().winner === -1) {
+        S.hands.push(newHand());
+        S.cur = S.hands.length - 1;
+      }
+      break;
+    case "reopen": // volver a abrir la última mano para corregirla
+      S.closed = S.hands.length - 1;
+      S.cur = S.closed;
+      break;
+    case "reset":  // nueva partida: pide confirmar con un segundo toque
+      if (confirmReset) {
+        S = null;
+        confirmReset = false;
+        try { localStorage.removeItem(STORAGE_KEY); } catch (err) { /* nada */ }
+      } else {
+        confirmReset = true;
+      }
+      break;
+  }
+
+  if (S) save();
+  render();
 });
-app.addEventListener("input",function(e){
- if(e.target.classList.contains("num")){S.hands[S.cur][+e.target.dataset.i].rec=Number(e.target.value)||0;save();live()}
- else if(e.target.classList.contains("nm")){S.names[+e.target.dataset.i]=e.target.value;save()}
+
+// Mientras se escribe: Recorrido actualiza los totales; el nombre se guarda
+app.addEventListener("input", e => {
+  const t = e.target;
+  if (t.classList.contains("num")) {
+    S.hands[S.cur][Number(t.dataset.i)].rec = Number(t.value) || 0;
+    save();
+    updateLive();
+  } else if (t.classList.contains("nm")) {
+    S.names[Number(t.dataset.i)] = t.value;
+    save();
+  }
 });
-app.addEventListener("change",function(e){if(e.target.classList.contains("num")||e.target.classList.contains("nm"))render()});
+
+// Al salir del campo se redibuja, para que los nombres se vean en todos lados
+app.addEventListener("change", e => {
+  if (e.target.classList.contains("num") || e.target.classList.contains("nm")) render();
+});
+
+/* ============================================================
+   10. ARRANQUE
+   ============================================================ */
+load();
 render();
 </script>
 </body>
