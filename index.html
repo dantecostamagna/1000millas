@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anotador 1000 Millas</title>
+<style>
+:root{--bg:#f3efe6;--card:#fff;--ink:#14202a;--mute:#6a7680;--line:#d9d3c4;--red:#c8202a;--yel:#ffd400;--teal:#1fa393;--on-red:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e171d;--card:#18252e;--ink:#eef1f2;--mute:#93a1ab;--line:#2b3b46;--red:#e0414a;--teal:#33c3b1;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e171d;--card:#18252e;--ink:#eef1f2;--mute:#93a1ab;--line:#2b3b46;--red:#e0414a;--teal:#33c3b1;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.35;padding:0 12px 40px}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:1.5rem;margin:16px 0 2px;letter-spacing:-.01em}
+h1 b{color:var(--red)}
+.sub{color:var(--mute);font-size:.9rem;margin:0 0 14px}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{background:var(--red);color:var(--on-red);border:0;border-radius:10px;padding:12px 16px;font-weight:700}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:focus-visible,.tab:focus-visible,.stp:focus-visible,.chk:focus-visible,input:focus-visible{outline:3px solid var(--yel);outline-offset:1px}
+.setup{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.counts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.counts .btn{min-width:56px;font-size:1.2rem}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.pl{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.pl .n{font-size:.85rem;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .v{font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--teal)}
+.pl.lead .bar i{background:var(--red)}
+.win{background:var(--yel);color:#14202a;border-radius:12px;padding:12px 14px;font-weight:700;margin-bottom:12px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px}
+.tab[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:6px;text-align:center;vertical-align:middle}
+th:last-child,td:last-child{border-right:0}
+tr:last-child td,tr:last-child th{border-bottom:0}
+thead th{background:var(--ink);padding:6px}
+thead th:first-child,tbody th{position:sticky;left:0}
+tbody th{background:var(--card);text-align:left;font-size:.85rem;font-weight:700;min-width:96px;z-index:1;border-right:1px solid var(--line)}
+thead th:first-child{background:var(--ink);color:var(--bg);font-size:.85rem;text-align:left;z-index:2}
+td{min-width:88px}
+.nm{width:100%;min-width:76px;background:transparent;border:0;color:var(--bg);font:inherit;font-weight:700;text-align:center;padding:4px}
+.num{width:100%;max-width:90px;font:inherit;font-size:1.1rem;text-align:center;padding:8px 4px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.cnt{display:flex;align-items:center;justify-content:center;gap:4px}
+.stp{width:34px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg);font-size:1.2rem;font-weight:800}
+.cnt .val{min-width:16px;font-weight:800;font-size:1.1rem}
+.chk{width:100%;max-width:100px;height:44px;margin:0 auto;border:0;background:transparent;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;color:var(--mute);padding:0 8px;border-radius:8px}
+.chk .box{width:26px;height:26px;flex:0 0 26px;border:2px solid var(--mute);border-radius:6px;background:var(--card);display:flex;align-items:center;justify-content:center;color:transparent;font-size:17px;line-height:1;font-weight:900}
+.chk[aria-checked="true"]{color:var(--ink)}
+.chk[aria-checked="true"] .box{background:var(--teal);border-color:var(--teal);color:#fff}
+.pt{display:block;font-size:.72rem;color:var(--mute);margin-top:2px;font-variant-numeric:tabular-nums}
+tfoot th,tfoot td{background:var(--bg);font-weight:800;font-size:1.15rem;font-variant-numeric:tabular-nums}
+tfoot th{font-size:.9rem}
+tfoot tr:last-child th,tfoot tr:last-child td{background:var(--ink);color:var(--bg)}
+.foot{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
+.hint{color:var(--mute);font-size:.8rem;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+var KEY="mil1000-v1";
+var ROWS=[
+ {k:"vc",l:"Viaje completo",t:"chk",p:400},
+ {k:"rec",l:"Recorrido",t:"num"},
+ {k:"tk",l:"TK",t:"cnt"},
+ {k:"seg",l:"Seguridades I",t:"cnt"},
+ {k:"seg2",l:"Seguridades II",t:"chk",p:300},
+ {k:"vs",l:"Viaje seguro",t:"chk",p:300},
+ {k:"bl",l:"Bloqueo",t:"chk",p:500},
+ {k:"ar",l:"Acción demorada",t:"chk",p:300},
+ {k:"ex",l:"Alargue",t:"chk",p:200}
+];
+var S=null, armed=false, P=0;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(S&&S.closed===undefined)S.closed=S.hands.length-1;
+if(S&&!S.v2){S.hands.forEach(function(H){H.forEach(function(c){if(c.seg===4&&!c.seg2)c.seg2=true})});S.v2=1}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function blank(){var o={};ROWS.forEach(function(r){o[r.k]=r.t==="chk"?false:0});return o}
+function newHand(){return S.names.map(blank)}
+function pts(h,r){
+ var v=h[r.k];
+ if(r.k==="rec")return Number(v)||0;
+ if(r.k==="seg")return v*100;
+ 
+ if(r.k==="tk")return v*300;
+ return v?r.p:0;
+}
+function handTot(h){return ROWS.reduce(function(a,r){return a+pts(h,r)},0)}
+function cum(i){var s=0;for(var k=0;k<S.closed;k++)s+=handTot(S.hands[k][i]);return s}
+function leader(){var t=S.names.map(function(_,i){return cum(i)}),m=Math.max.apply(null,t),c=t.filter(function(x){return x===m}).length;return {max:m,win:(m>=5000&&c===1)?t.indexOf(m):-1}}
+function norm(){if(S.closed===S.hands.length&&leader().win===-1){S.hands.push(newHand());S.cur=S.hands.length-1;save()}}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}
+function fmt(n){return n.toLocaleString("es-AR")}
+
+function render(){
+ var el=document.getElementById("app");
+ if(!S&&P){var f='<h1>1000 <b>millas</b></h1><p class="sub">Anotador de puntajes</p><div class="setup"><strong>¿Cómo se llaman?</strong><p class="sub">Escribí el nombre de cada jugador o equipo.</p>';
+  for(var q=0;q<P;q++)f+='<input class="nmin" style="width:100%;font:inherit;font-size:1.05rem;padding:12px;margin-bottom:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)" id="sn'+q+'" maxlength="24" placeholder="Jugador '+(q+1)+'" aria-label="Nombre '+(q+1)+'">';
+  f+='<div class="foot"><button class="btn alt" data-a="back">Volver</button><button class="btn" data-a="start">Empezar</button></div></div>';el.innerHTML=f;return}
+ if(!S){
+  el.innerHTML='<h1>1000 <b>millas</b></h1><p class="sub">Anotador de puntajes</p><div class="setup"><strong>¿Cuántos jugadores o equipos son?</strong><div class="counts">'+
+  [2,3,4,5,6].map(function(n){return '<button class="btn" data-a="count" data-n="'+n+'">'+n+'</button>'}).join("")+
+  '</div></div>';
+  return;
+ }
+ norm(); var tots=S.names.map(function(_,i){return cum(i)}), max=Math.max.apply(null,tots), L=leader();
+ var over=S.closed===S.hands.length; if(S.cur>=S.hands.length)S.cur=S.hands.length-1; var H=S.hands[S.cur];
+ var h='<h1>1000 <b>millas</b></h1><p class="sub">Se gana al llegar a 5.000 puntos</p>';
+ if(over){h+='<div class="win">¡'+esc(S.names[L.win])+' ganó la partida con '+fmt(max)+' puntos!</div>'}else if(max>=5000){h+='<div class="win">Hay empate en el primer lugar con '+fmt(max)+' puntos. Jueguen otra mano para desempatar.</div>'}
+ h+='<div class="board">'+S.names.map(function(n,i){
+  return '<div class="pl'+(tots[i]===max&&max>0?' lead':'')+'"><div class="n">'+esc(n)+'</div><div class="v" id="c'+i+'">'+fmt(tots[i])+'</div><div class="pt" id="o'+i+'">'+(over?'':'En juego: +'+fmt(handTot(S.hands[S.closed][i])))+'</div><div class="bar"><i id="b'+i+'" style="width:'+Math.min(100,tots[i]/50)+'%"></i></div></div>';
+ }).join("")+'</div>';
+ h+='<div class="tabs">'+S.hands.map(function(_,i){return '<button class="tab" data-a="tab" data-i="'+i+'"'+(i===S.cur?' aria-current="true"':'')+'>Mano '+(i+1)+'</button>'}).join("")+'</div>';
+ h+='<div class="sheet"><table><thead><tr><th>Equipos o jugadores</th>'+S.names.map(function(n,i){return '<th><input class="nm" data-i="'+i+'" value="'+esc(n)+'" aria-label="Nombre del jugador '+(i+1)+'"></th>'}).join("")+'</tr></thead><tbody>';
+ ROWS.forEach(function(r){
+  h+='<tr><th>'+r.l+'</th>';
+  H.forEach(function(c,i){
+   var v=c[r.k], p=pts(c,r), cell;
+   if(r.t==="num")cell='<input class="num" type="number" inputmode="numeric" min="0" step="25" placeholder="0" data-i="'+i+'" value="'+(v||"")+'" aria-label="Recorrido de '+esc(S.names[i])+'">';
+   else if(r.t==="cnt")cell='<div class="cnt"><button class="stp" data-a="cnt" data-i="'+i+'" data-k="'+r.k+'" data-d="-1" aria-label="Restar">−</button><span class="val">'+v+'</span><button class="stp" data-a="cnt" data-i="'+i+'" data-k="'+r.k+'" data-d="1" aria-label="Sumar">+</button></div>';
+   else if(r.t==="auto")cell='<div class="chk" role="checkbox" aria-readonly="true" aria-checked="'+(p>0)+'" aria-label="Seguridades II de '+esc(S.names[i])+'"><span class="box">✓</span><span>300</span></div>';
+   else cell='<button class="chk" role="checkbox" data-a="tog" data-i="'+i+'" data-k="'+r.k+'" aria-checked="'+v+'" aria-label="'+r.l+' de '+esc(S.names[i])+'"><span class="box">✓</span><span>'+r.p+'</span></button>';
+   h+='<td>'+cell+(r.t==="chk"||r.t==="auto"?'':'<span class="pt" id="p'+r.k+i+'">'+(r.t==="num"?'':fmt(p)+' pts')+'</span>')+'</td>';
+  });
+  h+='</tr>';
+ });
+ h+='</tbody><tfoot><tr><th>Total de la mano</th>'+H.map(function(c,i){return '<td id="t'+i+'">'+fmt(handTot(c))+'</td>'}).join("")+'</tr><tr><th>Total</th>'+S.names.map(function(_,i){return '<td id="g'+i+'">'+fmt(tots[i])+'</td>'}).join("")+'</tr></tfoot></table></div>';
+ h+='<p class="hint">Seguridades I suma 100 por carta. Seguridades II suma 300: se tilda sola al llegar a 4 en Seguridades I, pero podés marcarla o desmarcarla vos. TK suma 300 cada una. Al terminar una mano se suma al total. Gana quien llega a 5.000 o más al cerrar una mano. Todo se guarda solo en este teléfono.</p>';
+ h+='<div class="foot">'+(over?'<button class="btn" data-a="reopen">Corregir última mano</button>':(S.cur===S.closed?'<button class="btn" data-a="close">Terminar mano '+(S.closed+1)+'</button>':'<button class="btn" data-a="tab" data-i="'+S.closed+'">Volver a la mano en juego</button>'))+'<button class="btn alt" data-a="reset">'+(armed?'¿Seguro? Se borra todo':'Nueva partida')+'</button></div>';
+ el.innerHTML=h;
+}
+function live(){
+ var H=S.hands[S.cur];
+ H.forEach(function(c,i){var t=document.getElementById("t"+i);if(t)t.textContent=fmt(handTot(c))});
+ S.names.forEach(function(_,i){var v=cum(i),c=document.getElementById("c"+i),b=document.getElementById("b"+i),o=document.getElementById("o"+i),g=document.getElementById("g"+i);if(g)g.textContent=fmt(v);if(c)c.textContent=fmt(v);if(b)b.style.width=Math.min(100,v/50)+"%";if(o&&S.hands[S.closed])o.textContent="En juego: +"+fmt(handTot(S.hands[S.closed][i]))});
+}
+var app=document.getElementById("app");
+app.addEventListener("click",function(e){
+ var b=e.target.closest("[data-a]");if(!b)return;
+ var a=b.dataset.a;
+ if(a!=="reset")armed=false;
+ if(a==="count"){P=+b.dataset.n}
+ else if(a==="back"){P=0}
+ else if(a==="start"){var n=P;S={names:[],hands:[],cur:0,closed:0};for(var i=0;i<n;i++){var inp=document.getElementById("sn"+i);S.names.push((inp&&inp.value.trim())||"Jugador "+(i+1))}S.hands=[newHand()];P=0}
+ else if(a==="close"){S.closed=S.cur+1;if(leader().win===-1){S.hands.push(newHand());S.cur=S.hands.length-1}}
+ else if(a==="reopen"){S.closed=S.hands.length-1;S.cur=S.closed}
+ else if(a==="tab"){S.cur=+b.dataset.i}
+ else if(a==="new"){S.hands.push(newHand());S.cur=S.hands.length-1}
+ else if(a==="cnt"){var c=S.hands[S.cur][+b.dataset.i];c[b.dataset.k]=Math.max(0,Math.min(4,c[b.dataset.k]+ +b.dataset.d));if(b.dataset.k==="seg")c.seg2=c.seg===4}
+ else if(a==="tog"){var c2=S.hands[S.cur][+b.dataset.i];c2[b.dataset.k]=!c2[b.dataset.k]}
+ else if(a==="del"){S.hands.splice(S.cur,1);S.cur=Math.max(0,S.cur-1)}
+ else if(a==="reset"){if(armed){S=null;armed=false;try{localStorage.removeItem(KEY)}catch(x){}}else{armed=true}}
+ save();render();
+});
+app.addEventListener("input",function(e){
+ if(e.target.classList.contains("num")){S.hands[S.cur][+e.target.dataset.i].rec=Number(e.target.value)||0;save();live()}
+ else if(e.target.classList.contains("nm")){S.names[+e.target.dataset.i]=e.target.value;save()}
+});
+app.addEventListener("change",function(e){if(e.target.classList.contains("num")||e.target.classList.contains("nm"))render()});
+render();
+</script>
+</body>
+</html>
