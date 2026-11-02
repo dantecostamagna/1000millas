@@ -163,6 +163,15 @@ tfoot tr:last-child th, tfoot tr:last-child td { background: var(--ink); color: 
 
 /* Texto chico debajo de una celda ("300 pts") */
 .pt { display: block; font-size: .72rem; color: var(--mute); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+/* Casillas bloqueadas (Viaje completo de otro jugador; Alargue con viaje de 1000) */
+.chk:disabled { opacity: .35; cursor: not-allowed; }
+/* Recorrido anotado por la app (viaje completo): no se edita a mano */
+.num[readonly] { opacity: .7; }
+
+/* Selector de distancia del viaje */
+.trip { display: flex; align-items: center; gap: 6px; margin: 4px 0 8px; }
+.trip .sub { margin: 0 4px 0 0; }
 </style>
 </head>
 
@@ -179,6 +188,12 @@ tfoot tr:last-child th, tfoot tr:last-child td { background: var(--ink); color: 
 const STORAGE_KEY = "mil1000-v1"; // clave donde se guarda la partida en el navegador
 const WIN_SCORE   = 5000;         // puntos necesarios para ganar
 const PLAYER_OPTIONS = [2, 3, 4, 5, 6]; // cantidades de jugadores que se ofrecen
+
+// Distancia del viaje por mano. Según el reglamento, en partidas de 2, 3 o 6 jugadores
+// se recomienda acortarla a 700 millas; con "Alargue" se extiende hasta 1000.
+const SHORT_TRIP = 700;
+const FULL_TRIP  = 1000;
+const SHORT_TRIP_PLAYERS = [2, 3, 6]; // con estas cantidades se propone el viaje corto
 
 /*
   Filas de la hoja, en el orden en que se ven en pantalla.
@@ -207,7 +222,8 @@ const ROWS = [
        names:  ["Ana", "Luis"],      // un nombre por jugador
        hands:  [ [celda, celda], … ],// una mano = una celda por jugador
        cur:    0,                    // índice de la mano que se está mirando
-       closed: 0                     // cuántas manos ya están terminadas
+       closed: 0,                    // cuántas manos ya están terminadas
+       trip:   1000                  // distancia del viaje por mano: 700 o 1000
      }
    Una "celda" guarda los datos de un jugador en una mano:
      { vc:false, rec:0, tk:0, seg:0, seg2:false, vs:false, bl:false, ar:false, ex:false }
@@ -258,6 +274,16 @@ function blankCell() {
 
 // Mano nueva: una celda vacía por jugador
 function newHand() { return S.names.map(blankCell); }
+
+// Distancia del viaje que se propone según la cantidad de jugadores
+function defaultTrip(players) { return SHORT_TRIP_PLAYERS.includes(players) ? SHORT_TRIP : FULL_TRIP; }
+
+// Distancia del viaje de esta partida (las partidas viejas no la tenían guardada)
+function tripLength() { return S.trip || defaultTrip(S.names.length); }
+
+// Millas que le corresponden a quien completa el viaje: la distancia elegida,
+// o 1000 si pidió el Alargue
+function tripMiles(cell) { return cell.ex ? FULL_TRIP : tripLength(); }
 
 // Puntos de una fila para una celda
 function rowPoints(cell, row) {
@@ -369,8 +395,9 @@ function renderGame() {
     renderBanner(over, winner, max) +
     renderBoard(totals, max, over) +
     renderTabs() +
+    renderTrip() +
     renderSheet(hand, totals) +
-    `<p class="hint">Seguridades I suma 100 por carta. Seguridades II suma 300: se tilda sola al llegar a 4 en Seguridades I, pero podés marcarla o desmarcarla vos. TK suma 300 cada una. Al terminar una mano se suma al total. Gana quien llega a ${fmt(WIN_SCORE)} o más al cerrar una mano. Todo se guarda solo en este teléfono.</p>` +
+    `<p class="hint">Seguridades I suma 100 por carta. Seguridades II suma 300: se tilda sola al llegar a 4 en Seguridades I, pero podés marcarla o desmarcarla vos. TK suma 300 cada una. Viaje completo lo puede tener un solo jugador por mano y anota solo las millas del viaje en Recorrido. Alargue solo se usa con viaje de 700 millas. Al terminar una mano se suma al total. Gana quien llega a ${fmt(WIN_SCORE)} o más al cerrar una mano. Todo se guarda solo en este teléfono.</p>` +
     renderActions(over);
 }
 
@@ -412,6 +439,14 @@ function renderTabs() {
   return `<div class="tabs">${tabs}</div>`;
 }
 
+// Selector de la distancia del viaje (700 o 1000 millas)
+function renderTrip() {
+  const buttons = [SHORT_TRIP, FULL_TRIP].map(n =>
+    `<button class="tab" data-a="trip" data-n="${n}"${n === tripLength() ? ' aria-current="true"' : ""}>${n} millas</button>`
+  ).join("");
+  return `<div class="trip"><span class="sub">Distancia del viaje:</span>${buttons}</div>`;
+}
+
 // La hoja: encabezado con nombres, una fila por ROWS, y los totales al pie
 function renderSheet(hand, totals) {
   const header = S.names.map((name, i) =>
@@ -419,7 +454,7 @@ function renderSheet(hand, totals) {
   ).join("");
 
   const rows = ROWS.map(row => {
-    const cells = hand.map((cell, i) => `<td>${renderCell(row, cell, i)}</td>`).join("");
+    const cells = hand.map((cell, i) => `<td>${renderCell(row, cell, i, hand)}</td>`).join("");
     return `<tr><th>${row.label}</th>${cells}</tr>`;
   }).join("");
 
@@ -437,12 +472,12 @@ function renderSheet(hand, totals) {
 }
 
 // Una celda según el tipo de fila (number, count o check)
-function renderCell(row, cell, i) {
+function renderCell(row, cell, i, hand) {
   const v = cell[row.key];
 
   if (row.type === "number") {
     return `<input class="num" type="number" inputmode="numeric" min="0" step="25" placeholder="0"
-      data-i="${i}" value="${v || ""}" aria-label="${row.label} de ${esc(S.names[i])}">`;
+      data-i="${i}" value="${v || ""}"${cell.vc ? " readonly" : ""} aria-label="${row.label} de ${esc(S.names[i])}">`;
   }
 
   if (row.type === "count") {
@@ -453,8 +488,13 @@ function renderCell(row, cell, i) {
   }
 
   // "check"
+  let disabled = false;
+  // Viaje completo: solo un jugador por mano puede completar el viaje
+  if (row.key === "vc") disabled = !cell.vc && hand.some(c => c.vc);
+  // Alargue: solo vale cuando el viaje es de 700 millas (se puede desmarcar siempre)
+  if (row.key === "ex") disabled = !cell.ex && tripLength() !== SHORT_TRIP;
   return `<button class="chk" role="checkbox" data-a="tog" data-i="${i}" data-k="${row.key}"
-    aria-checked="${v}" aria-label="${row.label} de ${esc(S.names[i])}">
+    aria-checked="${v}"${disabled ? " disabled" : ""} aria-label="${row.label} de ${esc(S.names[i])}">
     <span class="box">✓</span><span>${row.points}</span></button>`;
 }
 
@@ -500,7 +540,7 @@ function updateLive() {
 
 app.addEventListener("click", e => {
   const btn = e.target.closest("[data-a]");
-  if (!btn) return;
+  if (!btn || btn.disabled) return;
   const action = btn.dataset.a;
   const i = Number(btn.dataset.i);
 
@@ -522,6 +562,7 @@ app.addEventListener("click", e => {
         S.names.push((input && input.value.trim()) || "Jugador " + (k + 1));
       }
       S.hands = [newHand()];
+      S.trip = defaultTrip(pendingCount);
       pendingCount = 0;
       break;
 
@@ -537,9 +578,20 @@ app.addEventListener("click", e => {
       if (row.key === "seg") cell.seg2 = cell.seg === 4;
       break;
     }
+    case "trip": { // cambiar la distancia del viaje
+      S.trip = Number(btn.dataset.n);
+      // Quien ya tiene viaje completo en la mano que se ve, recalcula sus millas
+      S.hands[S.cur].forEach(c => { if (c.vc) c.rec = tripMiles(c); });
+      break;
+    }
     case "tog": {  // marcar o desmarcar una casilla
       const cell = S.hands[S.cur][i];
-      cell[btn.dataset.k] = !cell[btn.dataset.k];
+      const key = btn.dataset.k;
+      const wasAuto = cell.vc && cell.rec === tripMiles(cell); // ¿esas millas las había puesto la app?
+      cell[key] = !cell[key];
+      if (key === "vc" && cell.vc)      cell.rec = tripMiles(cell);  // viaje completo: anota las millas del viaje
+      else if (key === "vc" && wasAuto) cell.rec = 0;                // lo desmarcó: borra lo que anotó la app
+      else if (key === "ex" && cell.vc) cell.rec = tripMiles(cell);  // el Alargue pasa las millas de 700 a 1000
       break;
     }
     case "close":  // terminar la mano: se suma al total y se abre otra (salvo que haya ganador)
